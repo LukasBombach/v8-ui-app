@@ -7,6 +7,10 @@ print("The sum of");
 print(arr);
 print("is");
 print(Deno.core.opSync('op_sum', arr));
+
+
+
+
 /* // And incorrect usage
 try {
   print(Deno.core.opSync('op_sum', 0));
