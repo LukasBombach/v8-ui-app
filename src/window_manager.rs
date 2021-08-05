@@ -1,3 +1,4 @@
+use std::boxed::Box;
 use std::collections::HashMap;
 
 pub use winit::{
@@ -7,14 +8,14 @@ pub use winit::{
 };
 
 pub struct WindowManager {
-  event_loop: EventLoop<()>,
+  event_loop: Box<EventLoop<()>>,
   windows: HashMap<WindowId, Window>,
 }
 
 impl WindowManager {
   pub fn new() -> WindowManager {
     WindowManager {
-      event_loop: EventLoop::new(),
+      event_loop: Box::new(EventLoop::new()),
       windows: HashMap::new(),
     }
   }
@@ -32,8 +33,9 @@ impl WindowManager {
   where
     F: 'static + FnMut(Event<'_, ()>, &mut WindowManager),
   {
-    self.event_loop.run(|event, event_loop, control_flow| {
+    self.event_loop.run(|event, _event_loop, control_flow| {
       *control_flow = ControlFlow::Wait;
-    })
+      // event_handler(event, self);
+    });
   }
 }
