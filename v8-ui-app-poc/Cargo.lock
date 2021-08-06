@@ -1258,7 +1258,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "v8-ui-app-poc"
+name = "v8-ui-app"
 version = "0.1.0"
 dependencies = [
  "deno_core",

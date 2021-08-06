@@ -31,7 +31,7 @@ fn main() {
     runtime.register_op(
       "openWindows",
       op_sync(move |_state, num_windows: i32, _: ()| {
-        let mut n = 1;
+        let mut n = 0;
         while n < num_windows {
           event_loop_proxy.send_event(CustomEvent::CreateWindow).ok();
           n += 1;
@@ -42,7 +42,12 @@ fn main() {
     runtime.sync_ops_cache();
 
     runtime
-      .execute_script("test", "Deno.core.opSync('openWindows', 4);")
+      .execute_script(
+        "test",
+        "setTimeout(function () {
+        Deno.core.opSync('openWindows', 1);
+      }, 0);",
+      )
       .unwrap();
   });
 
