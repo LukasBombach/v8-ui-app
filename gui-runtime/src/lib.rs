@@ -1,51 +1,75 @@
 use std::collections::HashMap;
 
+use winit::window::Window;
+use winit::window::WindowId;
 use winit::{
-    event::{ElementState, Event, KeyboardInput, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
-    window::Window,
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoop, EventLoopProxy},
 };
 
-pub fn run() {
-    let event_loop = EventLoop::new();
+#[derive(Debug, Clone, Copy)]
+pub enum CustomEvent {
+    CreateWindow,
+}
 
-    let mut windows = HashMap::new();
-    for _ in 0..3 {
-        let window = Window::new(&event_loop).unwrap();
-        windows.insert(window.id(), window);
+pub struct WindowManager {
+    event_loop: EventLoop<CustomEvent>,
+    event_loop_proxy: EventLoopProxy<CustomEvent>,
+}
+
+impl WindowManager {
+    fn new() -> WindowManager {
+        let event_loop = EventLoop::<CustomEvent>::with_user_event();
+        let event_loop_proxy = event_loop.create_proxy();
+
+        WindowManager {
+            event_loop,
+            event_loop_proxy,
+        }
     }
+
+    fn run(&mut self) -> ! {
+        let mut windows = HashMap::new();
+
+        self.event_loop.run(move |event, event_loop, control_flow| {
+            *control_flow = ControlFlow::Wait;
+            match event {
+                Event::UserEvent(event) => match event {
+                    CustomEvent::CreateWindow => {
+                        let window = Window::new(&event_loop).unwrap();
+                        windows.insert(window.id(), window);
+                    }
+                },
+                Event::WindowEvent {
+                    event: WindowEvent::CloseRequested,
+                    ..
+                } => *control_flow = ControlFlow::Exit,
+                _ => (),
+            }
+        })
+    }
+}
+/*
+pub fn run() {
+    let event_loop = EventLoop::<CustomEvent>::with_user_event();
+    let event_loop_proxy = event_loop.create_proxy();
+    let mut windows = HashMap::new();
 
     event_loop.run(move |event, event_loop, control_flow| {
         *control_flow = ControlFlow::Wait;
 
         match event {
-            Event::WindowEvent { event, window_id } => {
-                match event {
-                    WindowEvent::CloseRequested => {
-                        println!("Window {:?} has received the signal to close", window_id);
-
-                        // This drops the window, causing it to close.
-                        windows.remove(&window_id);
-
-                        if windows.is_empty() {
-                            *control_flow = ControlFlow::Exit;
-                        }
-                    }
-                    WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                state: ElementState::Pressed,
-                                ..
-                            },
-                        ..
-                    } => {
-                        let window = Window::new(&event_loop).unwrap();
-                        windows.insert(window.id(), window);
-                    }
-                    _ => (),
+            Event::UserEvent(event) => match event {
+                CustomEvent::CreateWindow => {
+                    let window = Window::new(&event_loop).unwrap();
+                    windows.insert(window.id(), window);
                 }
-            }
+            },
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => *control_flow = ControlFlow::Exit,
             _ => (),
         }
     })
-}
+} */
