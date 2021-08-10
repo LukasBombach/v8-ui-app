@@ -1,10 +1,9 @@
 [package]
-name = "poc"
+name = "gui-runtime"
 version = "0.1.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gui-runtime = { path = "../gui-runtime" }
-js-runtime = { path = "../js-runtime" }
+winit = "0.25.0"

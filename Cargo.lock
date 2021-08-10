@@ -534,6 +534,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "gui-runtime"
+version = "0.1.0"
+dependencies = [
+ "simple_logger",
+ "winit",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -988,6 +996,7 @@ checksum = "3831453b3449ceb48b6d9c7ad7c96d5ea673e9b470a1dc578c2ce6521230884c"
 name = "poc"
 version = "0.1.0"
 dependencies = [
+ "gui-runtime",
  "js-runtime",
 ]
 
@@ -1161,9 +1170,9 @@ dependencies = [
 
 [[package]]
 name = "simple_logger"
-version = "1.12.1"
+version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28475b72d7e5da6ad80c6d284aa557821bb4f7f788b9f607632635e3783a8608"
+checksum = "b7de33c687404ec3045d4a0d437580455257c0436f858d702f244e7d652f9f07"
 dependencies = [
  "atty",
  "chrono",
