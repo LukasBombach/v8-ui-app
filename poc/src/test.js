@@ -1,1 +1,1 @@
-Deno.core.opSync("log", "test message");
+Deno.core.opSync("openWindow");
