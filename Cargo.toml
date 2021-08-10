@@ -3,4 +3,6 @@
 members = [
     "v8-ui-app-poc",
     "http-bench-json-ops",
+    "http-bench-json-ops-winit",
+    "tokio-js-runtime-poc",
 ]

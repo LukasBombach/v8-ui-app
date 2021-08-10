@@ -556,6 +556,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-bench-json-ops-winit"
+version = "0.1.0"
+dependencies = [
+ "deno_core",
+ "log",
+ "tokio",
+ "winit",
+]
+
+[[package]]
 name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1257,6 +1267,14 @@ dependencies = [
  "signal-hook-registry",
  "tokio-macros",
  "winapi",
+]
+
+[[package]]
+name = "tokio-js-runtime-poc"
+version = "0.1.0"
+dependencies = [
+ "deno_core",
+ "tokio",
 ]
 
 [[package]]
