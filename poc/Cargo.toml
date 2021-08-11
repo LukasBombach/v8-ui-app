@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 gui-runtime = { path = "../gui-runtime" }
 js-runtime = { path = "../js-runtime" }
+winit = "0.25.0"
