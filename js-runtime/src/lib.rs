@@ -1,6 +1,10 @@
+use deno_core::include_js_files;
+use deno_core::Extension;
 use deno_core::JsRuntime;
+use deno_core::RuntimeOptions;
 
 use std::env;
+use std::vec::Vec;
 
 pub enum Event {
     OpenWindow,
@@ -12,7 +16,21 @@ where
 {
     deno_core::v8_set_flags(env::args().collect());
 
-    let mut js_runtime = JsRuntime::new(Default::default());
+    let mut extensions = Vec::new();
+    extensions.push(
+        Extension::builder()
+            .js(include_js_files!(
+                prefix "poc",
+                "src/windows.js",
+            ))
+            .build(),
+    );
+
+    let mut js_runtime = JsRuntime::new(RuntimeOptions {
+        extensions,
+        ..Default::default()
+    });
+
     js_runtime.register_op(
         "openWindow",
         deno_core::op_sync(move |_state, _params: (), _buf: ()| {

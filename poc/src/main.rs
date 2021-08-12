@@ -13,7 +13,7 @@ use winit::window::WindowId;
 
 #[derive(Debug, Clone, Copy)]
 enum CustomEvent {
-    Timer,
+    CreateWindow,
 }
 
 fn main() {
@@ -35,8 +35,7 @@ fn main() {
 
         js_runtime::run(js_code, move |event| match event {
             js_runtime::Event::OpenWindow => {
-                println!("open window");
-                event_loop_proxy.send_event(CustomEvent::Timer).ok();
+                event_loop_proxy.send_event(CustomEvent::CreateWindow).ok();
             }
         });
     });
@@ -45,17 +44,12 @@ fn main() {
         *control_flow = ControlFlow::Wait;
 
         match event {
-            Event::UserEvent(event) => {
-                println!("user event: {:?}", event);
-
-                let window = Window::new(&event_loop).unwrap();
-                windows.insert(window.id(), window);
-
-                /* WindowBuilder::new()
-                .with_title("A fantastic window!")
-                .build(&event_loop)
-                .unwrap(); */
-            }
+            Event::UserEvent(user_event) => match user_event {
+                CustomEvent::CreateWindow => {
+                    let window = Window::new(&event_loop).unwrap();
+                    windows.insert(window.id(), window);
+                }
+            },
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 ..
