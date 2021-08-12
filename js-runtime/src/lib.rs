@@ -7,7 +7,7 @@ use std::env;
 use std::vec::Vec;
 
 pub enum Event {
-    OpenWindow,
+    CreateWindow,
 }
 
 pub fn run<F>(code: &str, event_handler: F) -> ()
@@ -20,8 +20,8 @@ where
     extensions.push(
         Extension::builder()
             .js(include_js_files!(
-                prefix "poc",
-                "src/windows.js",
+                prefix "gui",
+                "src/gui.js",
             ))
             .build(),
     );
@@ -32,9 +32,12 @@ where
     });
 
     js_runtime.register_op(
-        "openWindow",
-        deno_core::op_sync(move |_state, _params: (), _buf: ()| {
-            event_handler(Event::OpenWindow);
+        "op_send_gui_event",
+        deno_core::op_sync(move |_state, name: String, _buf: ()| {
+            match &name[..] {
+                "create_window" => event_handler(Event::CreateWindow),
+                _ => println!("unknown event from op_send_gui_event {}", name),
+            }
             Ok(())
         }),
     );

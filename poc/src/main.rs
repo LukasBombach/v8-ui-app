@@ -28,7 +28,7 @@ fn main() {
         let js_code = include_str!("test.js");
 
         js_runtime::run(js_code, move |event| match event {
-            js_runtime::Event::OpenWindow => {
+            js_runtime::Event::CreateWindow => {
                 event_loop_proxy.send_event(CustomEvent::CreateWindow).ok();
             }
         });
