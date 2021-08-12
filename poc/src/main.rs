@@ -1,10 +1,10 @@
-// use gui_runtime;
 use js_runtime;
 use std::thread;
 
 use std::collections::HashMap;
 
 use winit::event::Event;
+use winit::event::StartCause;
 use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
 use winit::event_loop::EventLoop;
@@ -20,18 +20,12 @@ fn main() {
     let event_loop = EventLoop::<CustomEvent>::with_user_event();
     let mut windows: HashMap<WindowId, Window> = HashMap::new();
 
-    // let window = Window::new(&event_loop).unwrap();
-    // windows.insert(window.id(), window);
-
-    // `EventLoopProxy` allows you to dispatch custom events to the main Winit event
-    // loop from any thread.
-
     let event_loop_proxy = event_loop.create_proxy();
 
-    thread::spawn(move || {
-        let js_code = include_str!("test.js");
+    let js_thread = thread::spawn(move || {
+        thread::park();
 
-        std::thread::sleep(std::time::Duration::from_secs(2));
+        let js_code = include_str!("test.js");
 
         js_runtime::run(js_code, move |event| match event {
             js_runtime::Event::OpenWindow => {
@@ -44,12 +38,13 @@ fn main() {
         *control_flow = ControlFlow::Wait;
 
         match event {
-            Event::UserEvent(user_event) => match user_event {
-                CustomEvent::CreateWindow => {
-                    let window = Window::new(&event_loop).unwrap();
-                    windows.insert(window.id(), window);
-                }
-            },
+            Event::NewEvents(StartCause::Init) => {
+                js_thread.thread().unpark();
+            }
+            Event::UserEvent(CustomEvent::CreateWindow) => {
+                let window = Window::new(&event_loop).unwrap();
+                windows.insert(window.id(), window);
+            }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 ..
@@ -57,6 +52,4 @@ fn main() {
             _ => (),
         }
     });
-
-    // gui_runtime::run();
 }
