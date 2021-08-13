@@ -1,5 +1,5 @@
 [package]
-name = "js-runtime-deno"
+name = "deno-runtime-poc"
 version = "0.1.0"
 edition = "2018"
 
