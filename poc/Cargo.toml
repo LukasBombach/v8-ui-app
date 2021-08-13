@@ -6,6 +6,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+deno_core = "0.96.0"
+deno_runtime = "0.22.2"
 gui-runtime = { path = "../gui-runtime" }
 js-runtime = { path = "../js-runtime" }
+tokio = { version = "1.10.0", features = ["full"] }
 winit = "0.25.0"
