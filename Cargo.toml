@@ -6,6 +6,7 @@ members = [
     "http-bench-json-ops-winit",
     "tokio-js-runtime-poc",
     "js-runtime",
+    "js-runtime-deno",
     "gui-runtime",
     "poc",
 ]

@@ -1766,6 +1766,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "js-runtime-deno"
+version = "0.1.0"
+dependencies = [
+ "deno_core 0.96.0",
+ "deno_runtime",
+ "tokio",
+]
+
+[[package]]
 name = "js-sys"
 version = "0.3.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
