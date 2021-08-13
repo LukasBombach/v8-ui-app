@@ -1,4 +1,6 @@
-use js_runtime;
+use js_runtime_deno;
+
+use std::path::Path;
 use std::thread;
 
 use std::collections::HashMap;
@@ -25,13 +27,13 @@ fn main() {
     let js_thread = thread::spawn(move || {
         thread::park();
 
-        let js_code = include_str!("test.js");
+        js_runtime_deno::run("src/test.js");
 
-        js_runtime::run(js_code, move |event| match event {
-            js_runtime::Event::CreateWindow => {
-                event_loop_proxy.send_event(CustomEvent::CreateWindow).ok();
-            }
-        });
+        // js_runtime::run(js_code, move |event| match event {
+        //     js_runtime::Event::CreateWindow => {
+        //         event_loop_proxy.send_event(CustomEvent::CreateWindow).ok();
+        //     }
+        // });
     });
 
     event_loop.run(move |event, event_loop, control_flow| {

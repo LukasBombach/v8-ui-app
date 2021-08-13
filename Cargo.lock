@@ -603,6 +603,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "deno-runtime-poc"
+version = "0.1.0"
+dependencies = [
+ "deno_core 0.96.0",
+ "deno_runtime",
+ "tokio",
+]
+
+[[package]]
 name = "deno_broadcast_channel"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2358,6 +2367,7 @@ dependencies = [
  "deno_runtime",
  "gui-runtime",
  "js-runtime",
+ "js-runtime-deno",
  "tokio",
  "winit",
 ]

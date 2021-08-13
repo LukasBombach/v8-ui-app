@@ -1,5 +1,5 @@
-App.windows.create();
+setTimeout(() => {
+  console.log("new life");
+}, 1000);
 
-globalThis.__bootstrap.timers.setTimeout(() => {
-  App.windows.create();
-}, 2000)
+console.log("new test");

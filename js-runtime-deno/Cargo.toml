@@ -1,5 +1,5 @@
 [package]
-name = "poc"
+name = "js-runtime-deno"
 version = "0.1.0"
 edition = "2018"
 
@@ -8,8 +8,4 @@ edition = "2018"
 [dependencies]
 deno_core = "0.96.0"
 deno_runtime = "0.22.2"
-gui-runtime = { path = "../gui-runtime" }
-js-runtime = { path = "../js-runtime" }
-js-runtime-deno = { path = "../js-runtime-deno" }
 tokio = { version = "1.10.0", features = ["full"] }
-winit = "0.25.0"
