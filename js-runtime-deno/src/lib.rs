@@ -14,6 +14,7 @@ fn get_error_class_name(e: &AnyError) -> &'static str {
 
 pub fn run(js_path: &str) {
     let module_loader = Rc::new(FsModuleLoader);
+
     let create_web_worker_cb = Arc::new(|_| {
         todo!("Web workers are not supported in the example");
     });
@@ -44,8 +45,8 @@ pub fn run(js_path: &str) {
         cpu_count: 1,
     };
 
-    // let js_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/hello_runtime.js");
     let main_module = deno_core::resolve_path(js_path).unwrap();
+
     let permissions = Permissions::allow_all();
 
     let mut worker = MainWorker::from_options(main_module.clone(), permissions, &options);
