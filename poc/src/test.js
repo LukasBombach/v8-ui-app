@@ -1,7 +1,3 @@
 setTimeout(() => {
-  console.log("new life");
+  Deno.core.opSync("op_open_window");
 }, 1000);
-
-console.log("new test");
-
-Deno.core.opSync("op_open_window");

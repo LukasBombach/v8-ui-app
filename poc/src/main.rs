@@ -10,6 +10,7 @@ use deno_runtime::worker::WorkerOptions;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::Mutex;
 use std::thread;
 use winit::event::ElementState;
 use winit::event::Event;
@@ -24,6 +25,12 @@ fn get_error_class_name(e: &AnyError) -> &'static str {
 }
 
 fn main() {
+    let event_loop = Arc::new(EventLoop::new());
+    let mut windows = Arc::new(Mutex::new(HashMap::new()));
+
+    // let window = Window::new(&event_loop).unwrap();
+    // windows.insert(window.id(), window);
+
     thread::spawn(|| {
         let main_module = deno_core::resolve_path("src/test.js").unwrap();
         let module_loader = Rc::new(FsModuleLoader);
@@ -68,6 +75,11 @@ fn main() {
         );
         main_worker.js_runtime.sync_ops_cache();
 
+        let event_loop = Arc::clone(&event_loop);
+        let windows = Arc::clone(&windows).lock().unwrap();
+        let window = Window::new(&event_loop).unwrap();
+        windows.insert(window.id(), window);
+
         tokio_runtime.block_on(async {
             main_worker.bootstrap(&options);
             (main_worker.execute_module(&main_module).await).unwrap();
@@ -75,17 +87,13 @@ fn main() {
         });
     });
 
-    let event_loop = EventLoop::new();
-    let mut windows = HashMap::new();
-    let window = Window::new(&event_loop).unwrap();
-    windows.insert(window.id(), window);
-
     event_loop.run(move |event, event_loop, control_flow| {
         *control_flow = ControlFlow::Wait;
 
         match event {
             Event::WindowEvent { event, window_id } => match event {
                 WindowEvent::CloseRequested => {
+                    let windows = Arc::clone(&windows).lock().unwrap();
                     windows.remove(&window_id);
                     if windows.is_empty() {
                         *control_flow = ControlFlow::Exit;
@@ -99,6 +107,7 @@ fn main() {
                         },
                     ..
                 } => {
+                    let windows = Arc::clone(&windows).lock().unwrap();
                     let window = Window::new(&event_loop).unwrap();
                     windows.insert(window.id(), window);
                 }
