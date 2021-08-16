@@ -1,4 +1,5 @@
 use deno_core::error::AnyError;
+pub use deno_core::op_sync;
 use deno_core::FsModuleLoader;
 use deno_runtime::deno_broadcast_channel::InMemoryBroadcastChannel;
 use deno_runtime::deno_web::BlobStore;
@@ -54,11 +55,20 @@ fn main() {
             shared_array_buffer_store: None,
             cpu_count: 1,
         };
-        let runtime = create_basic_runtime();
+        let tokio_runtime = create_basic_runtime();
         let mut main_worker =
             MainWorker::from_options(main_module.clone(), Permissions::allow_all(), &options);
 
-        runtime.block_on(async {
+        main_worker.js_runtime.register_op(
+            "op_open_window",
+            op_sync(move |_state, _: (), _: ()| {
+                println!("called op_open_window");
+                Ok(())
+            }),
+        );
+        main_worker.js_runtime.sync_ops_cache();
+
+        tokio_runtime.block_on(async {
             main_worker.bootstrap(&options);
             (main_worker.execute_module(&main_module).await).unwrap();
             (main_worker.run_event_loop(false).await).unwrap();

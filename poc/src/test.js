@@ -4,4 +4,4 @@ setTimeout(() => {
 
 console.log("new test");
 
-// print(Deno.core.opSync("op_open_window"));
+Deno.core.opSync("op_open_window");
