@@ -2368,6 +2368,7 @@ dependencies = [
  "gui-runtime",
  "js-runtime",
  "js-runtime-deno",
+ "simple_logger",
  "tokio",
  "winit",
 ]

@@ -1,119 +1,51 @@
-use deno_core::error::AnyError;
-pub use deno_core::op_sync;
-use deno_core::FsModuleLoader;
-use deno_runtime::deno_broadcast_channel::InMemoryBroadcastChannel;
-use deno_runtime::deno_web::BlobStore;
-use deno_runtime::permissions::Permissions;
-use deno_runtime::tokio_util::create_basic_runtime;
-use deno_runtime::worker::MainWorker;
-use deno_runtime::worker::WorkerOptions;
 use std::collections::HashMap;
-use std::rc::Rc;
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::thread;
-use winit::event::ElementState;
+use std::sync::{Arc, RwLock};
+use std::{thread, time};
+
 use winit::event::Event;
-use winit::event::KeyboardInput;
+use winit::event::StartCause;
 use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
 use winit::event_loop::EventLoop;
 use winit::window::Window;
+use winit::window::WindowId;
 
-fn get_error_class_name(e: &AnyError) -> &'static str {
-    deno_runtime::errors::get_error_class_name(e).unwrap_or("Error")
+enum CustomEvent {
+    CreateWindow,
 }
 
 fn main() {
-    let event_loop = Arc::new(EventLoop::new());
-    let mut windows = Arc::new(Mutex::new(HashMap::new()));
+    let event_loop = EventLoop::<CustomEvent>::with_user_event();
+    let event_loop_proxy = event_loop.create_proxy();
+    let windows_hash: HashMap<WindowId, Window> = HashMap::new();
+    let windows_arc = Arc::new(RwLock::new(windows_hash));
+    let windows_el = Arc::clone(&windows_arc);
+    let windows_js = Arc::clone(&windows_arc);
 
-    // let window = Window::new(&event_loop).unwrap();
-    // windows.insert(window.id(), window);
-
-    thread::spawn(|| {
-        let main_module = deno_core::resolve_path("src/test.js").unwrap();
-        let module_loader = Rc::new(FsModuleLoader);
-        let create_web_worker_cb = Arc::new(|_| {
-            todo!("Web workers are not supported in the example");
-        });
-        let options = WorkerOptions {
-            apply_source_maps: false,
-            args: vec![],
-            debug_flag: false,
-            unstable: false,
-            unsafely_ignore_certificate_errors: None,
-            root_cert_store: None,
-            user_agent: "hello_runtime".to_string(),
-            seed: None,
-            js_error_create_fn: None,
-            create_web_worker_cb,
-            maybe_inspector_server: None,
-            should_break_on_first_statement: false,
-            module_loader,
-            runtime_version: "x".to_string(),
-            ts_version: "x".to_string(),
-            no_color: false,
-            get_error_class_fn: Some(&get_error_class_name),
-            location: None,
-            origin_storage_dir: None,
-            blob_store: BlobStore::default(),
-            broadcast_channel: InMemoryBroadcastChannel::default(),
-            shared_array_buffer_store: None,
-            cpu_count: 1,
-        };
-        let tokio_runtime = create_basic_runtime();
-        let mut main_worker =
-            MainWorker::from_options(main_module.clone(), Permissions::allow_all(), &options);
-
-        main_worker.js_runtime.register_op(
-            "op_open_window",
-            op_sync(move |_state, _: (), _: ()| {
-                println!("called op_open_window");
-                Ok(())
-            }),
-        );
-        main_worker.js_runtime.sync_ops_cache();
-
-        let event_loop = Arc::clone(&event_loop);
-        let windows = Arc::clone(&windows).lock().unwrap();
-        let window = Window::new(&event_loop).unwrap();
-        windows.insert(window.id(), window);
-
-        tokio_runtime.block_on(async {
-            main_worker.bootstrap(&options);
-            (main_worker.execute_module(&main_module).await).unwrap();
-            (main_worker.run_event_loop(false).await).unwrap();
-        });
+    let js_thread = thread::spawn(move || {
+        thread::park();
+        println!("windows {:?}", windows_js.read().unwrap());
+        event_loop_proxy.send_event(CustomEvent::CreateWindow).ok();
+        thread::sleep(time::Duration::from_secs(1));
+        println!("windows {:?}", windows_js.read().unwrap());
     });
 
     event_loop.run(move |event, event_loop, control_flow| {
         *control_flow = ControlFlow::Wait;
 
         match event {
-            Event::WindowEvent { event, window_id } => match event {
-                WindowEvent::CloseRequested => {
-                    let windows = Arc::clone(&windows).lock().unwrap();
-                    windows.remove(&window_id);
-                    if windows.is_empty() {
-                        *control_flow = ControlFlow::Exit;
-                    }
-                }
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            state: ElementState::Pressed,
-                            ..
-                        },
-                    ..
-                } => {
-                    let windows = Arc::clone(&windows).lock().unwrap();
-                    let window = Window::new(&event_loop).unwrap();
-                    windows.insert(window.id(), window);
-                }
-                _ => (),
-            },
+            Event::NewEvents(StartCause::Init) => {
+                js_thread.thread().unpark();
+            }
+            Event::UserEvent(CustomEvent::CreateWindow) => {
+                let window = Window::new(&event_loop).unwrap();
+                windows_el.write().unwrap().insert(window.id(), window);
+            }
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => *control_flow = ControlFlow::Exit,
             _ => (),
         }
-    })
+    });
 }
