@@ -1,7 +1,11 @@
+// use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::sync::mpsc::{Receiver, Sender};
-use std::sync::{mpsc, Arc, RwLock};
+use std::sync::mpsc;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::Sender;
+use std::sync::Arc;
+use std::sync::RwLock;
 use std::thread;
 
 use winit::event::Event;
@@ -13,8 +17,12 @@ use winit::window::Window;
 use winit::window::WindowId;
 
 use deno_core::error::AnyError;
-use deno_core::op_sync;
+use deno_core::op_async;
+// use deno_core::op_sync;
 use deno_core::FsModuleLoader;
+// use deno_core::OpState;
+// use deno_core::ResourceId;
+// use deno_core::ZeroCopyBuf;
 use deno_runtime::deno_broadcast_channel::InMemoryBroadcastChannel;
 use deno_runtime::deno_web::BlobStore;
 use deno_runtime::permissions::Permissions;
@@ -26,6 +34,10 @@ use deno_runtime::worker::WorkerOptions;
 enum CustomEvent {
     CreateWindow,
 }
+
+// async fn op_open_window(state: Rc<RefCell<OpState>>, _a: (), _b: ()) -> Result<(), AnyError> {
+//     Ok(())
+// }
 
 fn get_error_class_name(e: &AnyError) -> &'static str {
     deno_runtime::errors::get_error_class_name(e).unwrap_or("Error")
@@ -82,11 +94,12 @@ fn main() {
 
         worker.js_runtime.register_op(
             "op_open_window",
-            op_sync(move |_state, _: (), _: ()| {
+            op_async(async move |_s, _a: (), _b: ()| {
                 event_loop_proxy.send_event(CustomEvent::CreateWindow).ok();
                 Ok(())
             }),
         );
+
         worker.js_runtime.sync_ops_cache();
 
         thread::park();
