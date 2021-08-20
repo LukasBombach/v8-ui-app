@@ -1,4 +1,4 @@
-// use std::cell::RefCell;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::mpsc;
@@ -13,14 +13,15 @@ use winit::event::StartCause;
 use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
 use winit::event_loop::EventLoop;
+use winit::event_loop::EventLoopProxy;
 use winit::window::Window;
 use winit::window::WindowId;
 
 use deno_core::error::AnyError;
 use deno_core::op_async;
-// use deno_core::op_sync;
+use deno_core::op_sync;
 use deno_core::FsModuleLoader;
-// use deno_core::OpState;
+use deno_core::OpState;
 // use deno_core::ResourceId;
 // use deno_core::ZeroCopyBuf;
 use deno_runtime::deno_broadcast_channel::InMemoryBroadcastChannel;
@@ -30,12 +31,15 @@ use deno_runtime::tokio_util::create_basic_runtime;
 use deno_runtime::worker::MainWorker;
 use deno_runtime::worker::WorkerOptions;
 
-#[derive(Debug, Clone, Copy)]
+use serde::Serialize;
+
+#[derive(Debug)]
 enum CustomEvent {
-    CreateWindow,
+    RequestCreateWindow,
+    WindowCreated, /* (Window) */
 }
 
-// async fn op_open_window(state: Rc<RefCell<OpState>>, _a: (), _b: ()) -> Result<(), AnyError> {
+// async fn op_open_window(_: Rc<RefCell<OpState>>, _: (), _: ()) -> Result<Window, AnyError> {
 //     Ok(())
 // }
 
@@ -92,10 +96,18 @@ fn main() {
         let mut worker = MainWorker::from_options(main_module.clone(), permissions, &options);
         let tokio_runtime = create_basic_runtime();
 
+        worker
+            .js_runtime
+            .op_state()
+            .borrow_mut()
+            .put::<EventLoopProxy<CustomEvent>>(event_loop_proxy);
+
         worker.js_runtime.register_op(
             "op_open_window",
-            op_async(async move |_s, _a: (), _b: ()| {
-                event_loop_proxy.send_event(CustomEvent::CreateWindow).ok();
+            op_sync(move |_s, _a: (), _b: ()| {
+                // event_loop_proxy
+                //     .send_event(CustomEvent::RequestCreateWindow)
+                //     .ok();
                 Ok(())
             }),
         );
@@ -128,11 +140,13 @@ fn main() {
             Event::NewEvents(StartCause::Init) => {
                 js_thread.thread().unpark();
             }
-            Event::UserEvent(CustomEvent::CreateWindow) => {
+            Event::UserEvent(CustomEvent::RequestCreateWindow) => {
                 let window = Window::new(&event_loop).unwrap();
                 windows_el.write().unwrap().insert(window.id(), window);
-                tx.send(Event::UserEvent(CustomEvent::CreateWindow))
-                    .unwrap();
+                tx.send(Event::UserEvent(
+                    CustomEvent::WindowCreated, /* (window) */
+                ))
+                .unwrap();
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

@@ -1,9 +1,20 @@
-import { openWindow } from "./app";
+import { openWindow, closeWindow } from "./app";
 
-setTimeout(() => {
-  console.log("after 500ms");
-  openWindow();
-}, 2000);
+// /** @type {number | null} */
+// let windowId = null;
+//
+// setInterval(() => {
+//   if (windowId) {
+//     closeWindow(windowId);
+//   } else {
+//     windowId = openWindow();
+//   }
+// }, 1000);
 
-console.log("immediate");
-openWindow();
+const id = openWindow();
+
+if (typeof id === "number") {
+  console.log("✅ openWindow returns a number");
+} else {
+  console.log("❌ returned", id, typeof id);
+}
