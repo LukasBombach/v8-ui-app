@@ -3,7 +3,7 @@
  * @returns {{id: number}} Window A Window object
  */
 export function openWindow() {
-  return Deno.core.opSync("op_open_window");
+  return Deno.core.opAsync("op_open_window");
 }
 
 /**

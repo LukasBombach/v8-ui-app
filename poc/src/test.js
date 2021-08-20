@@ -1,4 +1,4 @@
-import { openWindow, closeWindow } from "./app";
+// import { openWindow, closeWindow } from "./app";
 
 // /** @type {number | null} */
 // let windowId = null;
@@ -11,10 +11,30 @@ import { openWindow, closeWindow } from "./app";
 //   }
 // }, 1000);
 
-const id = openWindow();
-
-if (typeof id === "number") {
-  console.log("✅ openWindow returns a number");
-} else {
-  console.log("❌ returned", id, typeof id);
+/**
+ * Opens a window
+ * @returns {Promise<{id: number}>} Window A Window object
+ */
+function openWindow() {
+  return Deno.core.opAsync("op_open_window");
 }
+
+/**
+ * Closes a window
+ * @param {number} id A window id
+ */
+function closeWindow(id) {
+  Deno.core.opSync("op_close_window", id);
+}
+
+async function main() {
+  const id = await openWindow();
+
+  if (typeof id === "number") {
+    console.log("✅ openWindow returns a number");
+  } else {
+    console.log("❌ returned", id, typeof id);
+  }
+}
+
+main();

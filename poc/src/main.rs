@@ -39,9 +39,18 @@ enum CustomEvent {
     WindowCreated, /* (Window) */
 }
 
-// async fn op_open_window(_: Rc<RefCell<OpState>>, _: (), _: ()) -> Result<Window, AnyError> {
-//     Ok(())
-// }
+async fn op_open_window(
+    op_state: Rc<RefCell<OpState>>,
+    _: (),
+    _: (),
+) -> Result<() /* Window */, AnyError> {
+    let mut op_state = op_state.borrow_mut();
+    let event_loop_proxy = op_state.take::<EventLoopProxy<CustomEvent>>();
+    event_loop_proxy
+        .send_event(CustomEvent::RequestCreateWindow)
+        .ok();
+    Ok(())
+}
 
 fn get_error_class_name(e: &AnyError) -> &'static str {
     deno_runtime::errors::get_error_class_name(e).unwrap_or("Error")
@@ -102,15 +111,9 @@ fn main() {
             .borrow_mut()
             .put::<EventLoopProxy<CustomEvent>>(event_loop_proxy);
 
-        worker.js_runtime.register_op(
-            "op_open_window",
-            op_sync(move |_s, _a: (), _b: ()| {
-                // event_loop_proxy
-                //     .send_event(CustomEvent::RequestCreateWindow)
-                //     .ok();
-                Ok(())
-            }),
-        );
+        worker
+            .js_runtime
+            .register_op("op_open_window", op_async(op_open_window));
 
         worker.js_runtime.sync_ops_cache();
 
