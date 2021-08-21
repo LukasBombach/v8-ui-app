@@ -1,3 +1,6 @@
+use std::sync::mpsc;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::Sender;
 use std::thread;
 
 async fn hello_world() {
@@ -22,9 +25,22 @@ impl<V, R> Server<V, R> {
 /* -> (Client<V, R>, Server<V, R>) */
 
 fn fetch<V, R>() -> (impl FnMut(V) -> R, impl FnMut(&mut dyn FnMut(V) -> R) -> ()) {
-    let request = |value: V| -> R {};
+    let (tx1, rx1): (Sender<V>, Receiver<V>) = mpsc::channel();
+    let (tx2, rx2): (Sender<R>, Receiver<R>) = mpsc::channel();
 
-    let respond = |request_handler: &mut dyn FnMut(V) -> R| -> () {};
+    let thread_tx1 = tx1.clone();
+    let thread_tx2 = tx2.clone();
+
+    let request = |v: V| -> R {
+        tx1.send(v).unwrap();
+        rx2.recv().unwrap()
+    };
+
+    let respond = |request_handler: &mut dyn FnMut(V) -> R| -> () {
+        let v = rx1.recv().unwrap();
+        let r = request_handler(v);
+        tx2.send(r).unwrap();
+    };
 
     (request, respond)
 }
