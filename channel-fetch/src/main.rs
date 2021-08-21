@@ -32,14 +32,14 @@ fn fetch<V, R>() -> (impl FnMut(V) -> R, impl FnMut(&mut dyn FnMut(V) -> R) -> (
     let thread_tx2 = tx2.clone();
 
     let request = |v: V| -> R {
-        tx1.send(v).unwrap();
+        thread_tx1.send(v).unwrap();
         rx2.recv().unwrap()
     };
 
     let respond = |request_handler: &mut dyn FnMut(V) -> R| -> () {
         let v = rx1.recv().unwrap();
         let r = request_handler(v);
-        tx2.send(r).unwrap();
+        thread_tx2.send(r).unwrap();
     };
 
     (request, respond)
