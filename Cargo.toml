@@ -9,5 +9,6 @@ members = [
     "deno-runtime-poc",
     "js-runtime-deno",
     "gui-runtime",
+    "channel-fetch",
     "poc",
 ]
